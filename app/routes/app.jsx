@@ -22,11 +22,11 @@ export default function App() {
   const { apiKey, host } = useLoaderData();
 
   return (
-    <AppBridgeProvider embedded apiKey={apiKey} host={host}>
+    <AppBridgeProvider isEmbeddedApp apiKey={apiKey}>
       <PolarisAppProvider i18n={enTranslations}>
         <ui-nav-menu>
-          <Link to="/app" rel="home">Dashboard</Link>
-          <Link to="/app/campaign/new">New Campaign</Link>
+          <a href="/app" rel="home">Dashboard</a>
+          <a href="/app/campaign/new">New Campaign</a>
         </ui-nav-menu>
         <Outlet />
       </PolarisAppProvider>
