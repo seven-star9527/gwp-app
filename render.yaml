@@ -6,13 +6,13 @@ services:
     startCommand: npx prisma migrate deploy && npm start
     disk:
       name: gwp-data
-      mountPath: /data
+      mountPath: /opt/render/project/src/db-data
       sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        value: file:/data/prod.db
+        value: file:/opt/render/project/src/db-data/prod.db
       - key: SHOPIFY_API_KEY
         sync: false
       - key: SHOPIFY_API_SECRET
