@@ -27,7 +27,7 @@ export default function Auth() {
   return (
     <AppProvider embedded={false}>
       <s-page>
-        <Form method="post">
+        <form method="post" action="/auth/login">
           <s-section heading="Log in">
             <s-text-field
               name="shop"
@@ -40,7 +40,7 @@ export default function Auth() {
             ></s-text-field>
             <s-button type="submit">Log in</s-button>
           </s-section>
-        </Form>
+        </form>
       </s-page>
     </AppProvider>
   );
