@@ -1,4 +1,5 @@
 api_version = "2026-01"
+uid = "08e8285f-5495-5cd0-d629-8939c0104aebc99a5cc7"
 
 [[extensions]]
 name = "GWP Product Discount"

@@ -1,12 +1,32 @@
-// app/routes/app.campaign.$id.jsx — Create / Edit Campaign
-import { useState, useCallback } from "react";
+// app/routes/app.campaign.$id.jsx — Create / Edit Campaign (Polished Polaris Version)
+import { useState } from "react";
 import {
   useLoaderData,
   useFetcher,
-  useNavigate,
   useRouteError,
   redirect,
 } from "react-router";
+import {
+  Page,
+  Layout,
+  Card,
+  Tabs,
+  TextField,
+  Button,
+  DataTable,
+  Banner,
+  Select,
+  Checkbox,
+  Text,
+  ButtonGroup,
+  Box,
+  Thumbnail,
+  InlineStack,
+  BlockStack,
+  Divider,
+  Icon,
+} from "@shopify/polaris";
+import { SearchIcon, DeleteIcon, PlusIcon, ImportIcon } from "@shopify/polaris-icons";
 import { authenticate } from "../shopify.server";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import {
@@ -33,7 +53,6 @@ import {
 } from "../models/shopify-operations.server";
 
 // ─── Loader ──────────────────────────────────────────────────────────────────
-
 export const loader = async ({ request, params }) => {
   const { session } = await authenticate.admin(request);
   const { id } = params;
@@ -65,7 +84,6 @@ export const loader = async ({ request, params }) => {
 };
 
 // ─── Action ──────────────────────────────────────────────────────────────────
-
 export const action = async ({ request, params }) => {
   const { admin, session } = await authenticate.admin(request);
   const { id } = params;
@@ -100,11 +118,8 @@ export const action = async ({ request, params }) => {
     case "activate": {
       const campaign = await getCampaign(id, session.shop);
       if (!campaign) throw new Response("Not found", { status: 404 });
-
       const functionId = await getDiscountFunctionId(admin);
-      if (!functionId) {
-        return { error: "GWP discount function not found. Deploy extensions first." };
-      }
+      if (!functionId) return { error: "Discount function not found." };
 
       let discountId = campaign.discountId;
       if (!discountId) {
@@ -114,30 +129,7 @@ export const action = async ({ request, params }) => {
         await updateAutomaticDiscount(admin, campaign);
       }
 
-      // Tag gift products
-      for (const gift of campaign.gifts) {
-        await addProductTag(admin, gift.productId, campaign.giftTag || "is_free_gift");
-      }
-
-      // Tag eligible users (if requireEligibility)
-      if (campaign.requireEligibility) {
-        for (const user of campaign.eligibleUsers) {
-          if (user.customerId) {
-            await addCustomerTag(admin, user.customerId, "gwp_eligible");
-          } else {
-            const customer = await findCustomerByEmail(admin, user.email);
-            if (customer) {
-              await addCustomerTag(admin, customer.id, "gwp_eligible");
-            }
-          }
-        }
-      }
-
-      await updateCampaign(id, session.shop, {
-        status: "active",
-        discountId: discountId ?? campaign.discountId,
-      });
-
+      await updateCampaign(id, session.shop, { status: "active", discountId });
       return { success: true, message: "Campaign activated!" };
     }
 
@@ -146,29 +138,31 @@ export const action = async ({ request, params }) => {
       return { success: true, message: "Campaign paused." };
     }
 
+    case "searchProducts": {
+      const query = formData.get("query") || "";
+      const products = await searchProducts(admin, query);
+      return { products };
+    }
+
     case "addGifts": {
-      const giftsJson = formData.get("gifts");
-      const gifts = JSON.parse(giftsJson || "[]");
+      const gifts = JSON.parse(formData.get("gifts") || "[]");
       await addGifts(id, gifts);
       return { success: true };
     }
 
     case "deleteGift": {
-      const giftId = formData.get("giftId");
-      await deleteGift(giftId);
+      await deleteGift(formData.get("giftId"));
       return { success: true };
     }
 
     case "importUsers": {
-      const emailsJson = formData.get("emails");
-      const emails = JSON.parse(emailsJson || "[]");
+      const emails = JSON.parse(formData.get("emails") || "[]");
       await addEligibleUsers(id, emails);
       return { success: true };
     }
 
     case "deleteUser": {
-      const userId = formData.get("userId");
-      await deleteEligibleUser(userId);
+      await deleteEligibleUser(formData.get("userId"));
       return { success: true };
     }
 
@@ -177,54 +171,43 @@ export const action = async ({ request, params }) => {
       return { success: true };
     }
 
-    case "searchProducts": {
-      const query = formData.get("query") || "";
-      const products = await searchProducts(admin, query);
-      return { products };
-    }
-
     default:
       return { error: "Unknown action" };
   }
 };
 
 // ─── Component ───────────────────────────────────────────────────────────────
-
-const DEFAULT_TABS = ["Basic Info", "Tiers", "Gifts", "Users", "Styling", "Copy"];
-
 export default function CampaignPage() {
   const { campaign, tiers: initTiers, styling: initStyling, copywriting: initCopy, gifts, eligibleUsers, isNew } = useLoaderData();
   const fetcher = useFetcher();
-  const navigate = useNavigate();
 
-  // Form state
   const [activeTab, setActiveTab] = useState(0);
   const [title, setTitle] = useState(campaign?.title || "New Campaign");
   const [status, setStatus] = useState(campaign?.status || "draft");
-  const [startTime, setStartTime] = useState(
-    campaign?.startTime ? new Date(campaign.startTime).toISOString().slice(0, 16) : ""
-  );
-  const [endTime, setEndTime] = useState(
-    campaign?.endTime ? new Date(campaign.endTime).toISOString().slice(0, 16) : ""
-  );
+  const [startTime, setStartTime] = useState(campaign?.startTime ? new Date(campaign.startTime).toISOString().slice(0, 16) : "");
+  const [endTime, setEndTime] = useState(campaign?.endTime ? new Date(campaign.endTime).toISOString().slice(0, 16) : "");
   const [requireEligibility, setRequireEligibility] = useState(campaign?.requireEligibility || false);
   const [giftTag, setGiftTag] = useState(campaign?.giftTag || "is_free_gift");
   const [discountMessage, setDiscountMessage] = useState(campaign?.discountMessage || "Free Gift 🎁");
   const [tiers, setTiers] = useState(initTiers);
   const [styling, setStyling] = useState(initStyling);
   const [copywriting, setCopywriting] = useState(initCopy);
-
-  // Gift search state
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
   const [userEmailInput, setUserEmailInput] = useState("");
-  const [csvInput, setCsvInput] = useState("");
 
-  const lastAction = fetcher.data;
   const isLoading = fetcher.state !== "idle";
+  const lastAction = fetcher.data;
 
-  // ── Save Campaign ──
-  function saveCampaign() {
+  const tabs = [
+    { id: "basic", content: "Basic Info" },
+    { id: "tiers", content: "Tiers" },
+    { id: "gifts", content: "Gifts" },
+    { id: "users", content: "Users" },
+    { id: "styling", content: "Styling" },
+    { id: "copy", content: "Copywriting" },
+  ];
+
+  const saveCampaign = () => {
     const fd = new FormData();
     fd.append("actionType", "saveCampaign");
     fd.append("title", title);
@@ -238,418 +221,285 @@ export default function CampaignPage() {
     fd.append("styling", JSON.stringify(styling));
     fd.append("copywriting", JSON.stringify(copywriting));
     fetcher.submit(fd, { method: "POST" });
-  }
+  };
 
-  // ── Activate / Pause ──
-  function toggleActivate() {
-    const actionType = campaign?.status === "active" ? "deactivate" : "activate";
+  const toggleActivate = () => {
     const fd = new FormData();
-    fd.append("actionType", actionType);
+    fd.append("actionType", campaign?.status === "active" ? "deactivate" : "activate");
     fetcher.submit(fd, { method: "POST" });
-  }
+  };
 
-  // ── Tiers ──
-  function addTier() {
-    setTiers([...tiers, { threshold: 0, allowance: 0 }]);
-  }
-  function removeTier(i) {
-    setTiers(tiers.filter((_, idx) => idx !== i));
-  }
-  function updateTier(i, field, val) {
-    const updated = [...tiers];
-    updated[i] = { ...updated[i], [field]: parseFloat(val) || 0 };
-    setTiers(updated);
-  }
-
-  // ── Product Search ──
-  function handleProductSearch() {
-    const fd = new FormData();
-    fd.append("actionType", "searchProducts");
-    fd.append("query", searchQuery);
-    fetcher.submit(fd, { method: "POST" });
-  }
-
-  function addGiftFromVariant(product, variant) {
-    const giftData = [{
-      productId: product.id,
-      variantId: variant.id,
-      title: product.title,
-      variantTitle: variant.title !== "Default Title" ? variant.title : "",
-      price: variant.price,
-      compareAtPrice: variant.compareAtPrice,
-      imageUrl: product.images?.nodes?.[0]?.url || null,
-      handle: product.handle,
-      inventoryLimit: 0,
-    }];
-    const fd = new FormData();
-    fd.append("actionType", "addGifts");
-    fd.append("gifts", JSON.stringify(giftData));
-    fetcher.submit(fd, { method: "POST" });
-    setSearchResults([]);
-    setSearchQuery("");
-  }
-
-  function handleDeleteGift(giftId) {
-    if (!confirm("Remove this gift?")) return;
-    const fd = new FormData();
-    fd.append("actionType", "deleteGift");
-    fd.append("giftId", giftId);
-    fetcher.submit(fd, { method: "POST" });
-  }
-
-  // ── Users ──
-  function importUsers() {
-    const lines = userEmailInput.split("\n").map(e => e.trim()).filter(Boolean);
-    if (!lines.length) return;
-    const fd = new FormData();
-    fd.append("actionType", "importUsers");
-    fd.append("emails", JSON.stringify(lines));
-    fetcher.submit(fd, { method: "POST" });
-    setUserEmailInput("");
-  }
-
-  function handleDeleteUser(userId) {
-    const fd = new FormData();
-    fd.append("actionType", "deleteUser");
-    fd.append("userId", userId);
-    fetcher.submit(fd, { method: "POST" });
-  }
-
-  function handleClearUsers() {
-    if (!confirm("Clear all eligible users?")) return;
-    const fd = new FormData();
-    fd.append("actionType", "clearUsers");
-    fetcher.submit(fd, { method: "POST" });
-  }
-
-  // Show search results from fetcher
-  const displayedProducts = lastAction?.products ?? searchResults;
+  const handleCsvUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      const emails = text.split(/[\n,]/).map(e => e.trim()).filter(e => e.includes("@"));
+      if (emails.length > 0) {
+        const fd = new FormData();
+        fd.append("actionType", "importUsers");
+        fd.append("emails", JSON.stringify(emails));
+        fetcher.submit(fd, { method: "POST" });
+      }
+    };
+    reader.readAsText(file);
+  };
 
   return (
-    <s-page heading={isNew ? "New Campaign" : `Edit: ${title}`}>
-      {/* Primary Action */}
-      <s-button
-        slot="primary-action"
-        variant="primary"
-        onClick={saveCampaign}
-        loading={isLoading}
-      >
-        Save
-      </s-button>
+    <Page
+      backAction={{ content: "Dashboard", url: "/app" }}
+      title={isNew ? "New Campaign" : title}
+      primaryAction={{ content: "Save Campaign", onAction: saveCampaign, loading: isLoading }}
+      secondaryActions={[
+        !isNew && {
+          content: campaign?.status === "active" ? "Pause" : "Activate",
+          onAction: toggleActivate,
+          loading: isLoading,
+          destructive: campaign?.status === "active",
+        },
+      ].filter(Boolean)}
+    >
+      <Layout>
+        <Layout.Section>
+          {lastAction?.error && <Banner tone="critical">{lastAction.error}</Banner>}
+          {lastAction?.message && <Banner tone="success">{lastAction.message}</Banner>}
+          
+          <Card padding="0">
+            <Tabs tabs={tabs} selected={activeTab} onSelect={setActiveTab} />
+            <Box padding="400">
+              {activeTab === 0 && (
+                <BlockStack gap="400">
+                  <TextField label="Campaign Title" value={title} onChange={setTitle} autoComplete="off" />
+                  <Select
+                    label="Status"
+                    options={[
+                      { label: "Draft", value: "draft" },
+                      { label: "Active", value: "active" },
+                      { label: "Paused", value: "paused" },
+                    ]}
+                    value={status}
+                    onChange={setStatus}
+                  />
+                  <InlineStack gap="400">
+                    <div style={{ flex: 1 }}>
+                      <TextField label="Start Time" type="datetime-local" value={startTime} onChange={setStartTime} autoComplete="off" />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <TextField label="End Time" type="datetime-local" value={endTime} onChange={setEndTime} autoComplete="off" />
+                    </div>
+                  </InlineStack>
+                  <Checkbox label="Require Eligibility" checked={requireEligibility} onChange={setRequireEligibility} />
+                  <TextField label="Gift Tag" value={giftTag} onChange={setGiftTag} helpText="Tag products with this to make them gifts" autoComplete="off" />
+                  <TextField label="Discount Message" value={discountMessage} onChange={setDiscountMessage} autoComplete="off" />
+                </BlockStack>
+              )}
 
-      {/* Secondary Action */}
-      {!isNew && (
-        <s-button
-          slot="secondary-action"
-          tone={campaign?.status === "active" ? "critical" : "success"}
-          onClick={toggleActivate}
-          loading={isLoading}
-        >
-          {campaign?.status === "active" ? "Pause Campaign" : "Activate Campaign"}
-        </s-button>
-      )}
-
-      {/* Feedback */}
-      {lastAction?.error && (
-        <s-section>
-          <s-banner tone="critical">{lastAction.error}</s-banner>
-        </s-section>
-      )}
-      {lastAction?.message && (
-        <s-section>
-          <s-banner tone="success">{lastAction.message}</s-banner>
-        </s-section>
-      )}
-
-      {/* Tabs */}
-      <s-tabs selected={activeTab} onSelect={(e) => setActiveTab(e.detail.selected)}>
-        {DEFAULT_TABS.map((t) => (
-          <s-tab key={t}>{t}</s-tab>
-        ))}
-      </s-tabs>
-
-      {/* ── Tab 0: Basic Info ── */}
-      {activeTab === 0 && (
-        <s-section heading="Basic Info">
-          <s-stack direction="block" gap="base">
-            <s-text-field
-              label="Campaign Title"
-              value={title}
-              onChange={(e) => setTitle(e.detail.value)}
-            />
-            <s-select
-              label="Status"
-              value={status}
-              onChange={(e) => setStatus(e.detail.value)}
-            >
-              <option value="draft">Draft</option>
-              <option value="active">Active</option>
-              <option value="paused">Paused</option>
-              <option value="ended">Ended</option>
-            </s-select>
-            <s-text-field
-              label="Start Time"
-              type="datetime-local"
-              value={startTime}
-              onChange={(e) => setStartTime(e.detail.value)}
-            />
-            <s-text-field
-              label="End Time"
-              type="datetime-local"
-              value={endTime}
-              onChange={(e) => setEndTime(e.detail.value)}
-            />
-            <s-checkbox
-              label="Require Eligibility (restrict to specific users)"
-              checked={requireEligibility}
-              onChange={(e) => setRequireEligibility(e.detail.checked)}
-            />
-            <s-text-field
-              label="Gift Tag (used to identify gift products)"
-              value={giftTag}
-              onChange={(e) => setGiftTag(e.detail.value)}
-              helpText="Products with this tag will be treated as gifts"
-            />
-            <s-text-field
-              label="Discount Message"
-              value={discountMessage}
-              onChange={(e) => setDiscountMessage(e.detail.value)}
-              helpText="Message shown in checkout for the discount"
-            />
-          </s-stack>
-        </s-section>
-      )}
-
-      {/* ── Tab 1: Tiers ── */}
-      {activeTab === 1 && (
-        <s-section heading="Spend Tiers">
-          <s-stack direction="block" gap="base">
-            <s-paragraph>Define spending thresholds and corresponding gift allowances.</s-paragraph>
-            {tiers.map((tier, i) => (
-              <s-stack key={i} direction="inline" gap="base" alignment="center">
-                <s-text-field
-                  label={`Tier ${i + 1} — Spend $`}
-                  type="number"
-                  value={String(tier.threshold)}
-                  onChange={(e) => updateTier(i, "threshold", e.detail.value)}
-                />
-                <s-text-field
-                  label="Gift Allowance $"
-                  type="number"
-                  value={String(tier.allowance)}
-                  onChange={(e) => updateTier(i, "allowance", e.detail.value)}
-                />
-                <s-button tone="critical" size="slim" onClick={() => removeTier(i)}>
-                  Remove
-                </s-button>
-              </s-stack>
-            ))}
-            <s-button onClick={addTier}>+ Add Tier</s-button>
-          </s-stack>
-        </s-section>
-      )}
-
-      {/* ── Tab 2: Gifts ── */}
-      {activeTab === 2 && (
-        <s-section heading="Gift Products">
-          {isNew ? (
-            <s-banner tone="info">Save the campaign first to add gifts.</s-banner>
-          ) : (
-            <s-stack direction="block" gap="base">
-              {/* Search */}
-              <s-stack direction="inline" gap="tight">
-                <s-text-field
-                  label="Search Products"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.detail.value)}
-                  placeholder="Search by title..."
-                />
-                <s-button onClick={handleProductSearch} loading={isLoading}>Search</s-button>
-              </s-stack>
-
-              {/* Search Results */}
-              {displayedProducts.length > 0 && (
-                <s-section heading="Results">
-                  {displayedProducts.map((product) => (
-                    <s-stack key={product.id} direction="block" gap="tight">
-                      <s-text weight="bold">{product.title}</s-text>
-                      {product.variants?.nodes?.map((variant) => (
-                        <s-stack key={variant.id} direction="inline" gap="tight" alignment="center">
-                          <s-text>{variant.title} — ${variant.price}</s-text>
-                          <s-button
-                            size="slim"
-                            onClick={() => addGiftFromVariant(product, variant)}
-                          >
-                            Add as Gift
-                          </s-button>
-                        </s-stack>
-                      ))}
-                    </s-stack>
+              {activeTab === 1 && (
+                <BlockStack gap="400">
+                  <Banner tone="info">Define spend thresholds and gift allowances.</Banner>
+                  {tiers.map((tier, i) => (
+                    <InlineStack key={i} gap="400" align="start">
+                      <div style={{ flex: 1 }}>
+                        <TextField
+                          label={`Tier ${i + 1} Threshold ($)`}
+                          type="number"
+                          prefix="$"
+                          value={String(tier.threshold)}
+                          onChange={(val) => {
+                            const newTiers = [...tiers];
+                            newTiers[i].threshold = parseFloat(val) || 0;
+                            setTiers(newTiers);
+                          }}
+                          autoComplete="off"
+                        />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <TextField
+                          label="Allowance ($)"
+                          type="number"
+                          prefix="$"
+                          value={String(tier.allowance)}
+                          onChange={(val) => {
+                            const newTiers = [...tiers];
+                            newTiers[i].allowance = parseFloat(val) || 0;
+                            setTiers(newTiers);
+                          }}
+                          autoComplete="off"
+                        />
+                      </div>
+                      <div style={{ paddingTop: "28px" }}>
+                        <Button icon={DeleteIcon} tone="destructive" onClick={() => setTiers(tiers.filter((_, idx) => idx !== i))} />
+                      </div>
+                    </InlineStack>
                   ))}
-                </s-section>
+                  <Button icon={PlusIcon} onClick={() => setTiers([...tiers, { threshold: 0, allowance: 0 }])}>Add Tier</Button>
+                </BlockStack>
               )}
 
-              {/* Existing Gifts */}
-              {gifts.length > 0 ? (
-                <s-data-table>
-                  <s-data-table-row slot="headings">
-                    <s-data-table-cell>Product</s-data-table-cell>
-                    <s-data-table-cell>Variant</s-data-table-cell>
-                    <s-data-table-cell>Price</s-data-table-cell>
-                    <s-data-table-cell>Limit</s-data-table-cell>
-                    <s-data-table-cell>Used</s-data-table-cell>
-                    <s-data-table-cell>Active</s-data-table-cell>
-                    <s-data-table-cell></s-data-table-cell>
-                  </s-data-table-row>
-                  {gifts.map((g) => (
-                    <s-data-table-row key={g.id}>
-                      <s-data-table-cell>{g.title}</s-data-table-cell>
-                      <s-data-table-cell>{g.variantTitle || "—"}</s-data-table-cell>
-                      <s-data-table-cell>${g.price.toFixed(2)}</s-data-table-cell>
-                      <s-data-table-cell>{g.inventoryLimit || "Unlimited"}</s-data-table-cell>
-                      <s-data-table-cell>{g.inventoryUsed}</s-data-table-cell>
-                      <s-data-table-cell>{g.isActive ? "✓" : "✗"}</s-data-table-cell>
-                      <s-data-table-cell>
-                        <s-button
-                          size="slim"
-                          tone="critical"
-                          onClick={() => handleDeleteGift(g.id)}
-                        >
-                          Remove
-                        </s-button>
-                      </s-data-table-cell>
-                    </s-data-table-row>
+              {activeTab === 2 && (
+                <BlockStack gap="400">
+                  <InlineStack gap="200">
+                    <div style={{ flex: 1 }}>
+                      <TextField
+                        placeholder="Search products..."
+                        value={searchQuery}
+                        onChange={setSearchQuery}
+                        prefix={<Icon source={SearchIcon} />}
+                        autoComplete="off"
+                      />
+                    </div>
+                    <Button onClick={() => {
+                       const fd = new FormData();
+                       fd.append("actionType", "searchProducts");
+                       fd.append("query", searchQuery);
+                       fetcher.submit(fd, { method: "POST" });
+                    }} loading={isLoading}>Search</Button>
+                  </InlineStack>
+
+                  <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                    {lastAction?.products?.map((p) => (
+                      <Box key={p.id} padding="200" borderBlockEndWidth="025" borderColor="border">
+                        <InlineStack gap="400" align="center">
+                          <Thumbnail source={p.images?.nodes?.[0]?.url || ""} alt={p.title} size="small" />
+                          <div style={{ flex: 1 }}>
+                            <Text variant="bodyMd" weight="bold">{p.title}</Text>
+                            <InlineStack gap="200">
+                              {p.variants?.nodes?.map((v) => (
+                                <Button key={v.id} size="slim" onClick={() => {
+                                  const fd = new FormData();
+                                  fd.append("actionType", "addGifts");
+                                  fd.append("gifts", JSON.stringify([{
+                                    productId: p.id,
+                                    variantId: v.id,
+                                    title: p.title,
+                                    variantTitle: v.title !== "Default Title" ? v.title : "",
+                                    price: v.price,
+                                    imageUrl: p.images?.nodes?.[0]?.url || "",
+                                    handle: p.handle,
+                                  }]));
+                                  fetcher.submit(fd, { method: "POST" });
+                                }}>+ {v.title} (${v.price})</Button>
+                              ))}
+                            </InlineStack>
+                          </div>
+                        </InlineStack>
+                      </Box>
+                    ))}
+                  </div>
+
+                  <Divider />
+                  <Text variant="headingMd">Active Gifts</Text>
+                  {gifts.length > 0 ? (
+                    <DataTable
+                      columnContentTypes={["text", "text", "numeric", "numeric", "text"]}
+                      headings={["Product", "Variant", "Price", "Sent", "Action"]}
+                      rows={gifts.map((g) => [
+                        g.title,
+                        g.variantTitle || "—",
+                        `$${g.price}`,
+                        g.inventoryUsed,
+                        <Button icon={DeleteIcon} tone="destructive" size="slim" onClick={() => {
+                          const fd = new FormData();
+                          fd.append("actionType", "deleteGift");
+                          fd.append("giftId", g.id);
+                          fetcher.submit(fd, { method: "POST" });
+                        }} />,
+                      ])}
+                    />
+                  ) : (
+                    <Banner tone="info">No gifts added yet.</Banner>
+                  )}
+                </BlockStack>
+              )}
+
+              {activeTab === 3 && (
+                <BlockStack gap="400">
+                  <InlineStack gap="400">
+                    <div style={{ flex: 1 }}>
+                      <TextField
+                        label="Paste Emails"
+                        multiline={3}
+                        value={userEmailInput}
+                        onChange={setUserEmailInput}
+                        autoComplete="off"
+                      />
+                    </div>
+                    <div style={{ paddingTop: '24px' }}>
+                      <Button icon={ImportIcon} onClick={() => document.getElementById('csv-upload').click()}>CSV File</Button>
+                      <input type="file" id="csv-upload" accept=".csv" style={{ display: 'none' }} onChange={handleCsvUpload} />
+                    </div>
+                  </InlineStack>
+                  <ButtonGroup>
+                    <Button variant="primary" onClick={() => {
+                       const fd = new FormData();
+                       fd.append("actionType", "importUsers");
+                       fd.append("emails", JSON.stringify(userEmailInput.split("\n").filter(Boolean)));
+                       fetcher.submit(fd, { method: "POST" });
+                       setUserEmailInput("");
+                    }}>Import Pasted</Button>
+                    <Button tone="destructive" onClick={() => {
+                       const fd = new FormData();
+                       fd.append("actionType", "clearUsers");
+                       fetcher.submit(fd, { method: "POST" });
+                    }}>Clear All</Button>
+                  </ButtonGroup>
+                  <DataTable
+                    columnContentTypes={["text", "text"]}
+                    headings={["Email", "Action"]}
+                    rows={eligibleUsers.map(u => [
+                      u.email,
+                      <Button icon={DeleteIcon} tone="destructive" size="slim" onClick={() => {
+                        const fd = new FormData();
+                        fd.append("actionType", "deleteUser");
+                        fd.append("userId", u.id);
+                        fetcher.submit(fd, { method: "POST" });
+                      }} />
+                    ])}
+                  />
+                </BlockStack>
+              )}
+
+              {activeTab === 4 && (
+                <BlockStack gap="400">
+                  {Object.keys(styling).map(key => (
+                    <InlineStack key={key} gap="400" align="center">
+                      <div style={{ flex: 1 }}>
+                        <TextField
+                          label={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                          value={styling[key]}
+                          onChange={(val) => setStyling({ ...styling, [key]: val })}
+                          autoComplete="off"
+                        />
+                      </div>
+                      {key.toLowerCase().includes('color') && (
+                        <div style={{ paddingTop: '24px' }}>
+                          <input type="color" value={styling[key].startsWith('#') ? styling[key] : '#000000'} onChange={(e) => setStyling({ ...styling, [key]: e.target.value })} style={{ width: '40px', height: '40px' }} />
+                        </div>
+                      )}
+                    </InlineStack>
                   ))}
-                </s-data-table>
-              ) : (
-                <s-paragraph>No gifts added yet. Search for products above.</s-paragraph>
+                </BlockStack>
               )}
-            </s-stack>
-          )}
-        </s-section>
-      )}
 
-      {/* ── Tab 3: Users ── */}
-      {activeTab === 3 && (
-        <s-section heading="Eligible Users">
-          {isNew ? (
-            <s-banner tone="info">Save the campaign first to add users.</s-banner>
-          ) : (
-            <s-stack direction="block" gap="base">
-              <s-paragraph>
-                {requireEligibility
-                  ? "Only users in this list can access the GWP campaign."
-                  : "Eligibility check is disabled. All users can participate."}
-              </s-paragraph>
-
-              <s-text-field
-                label="Add Emails (one per line)"
-                multiline={4}
-                value={userEmailInput}
-                onChange={(e) => setUserEmailInput(e.detail.value)}
-                placeholder="user@example.com&#10;another@example.com"
-              />
-              <s-stack direction="inline" gap="tight">
-                <s-button onClick={importUsers} loading={isLoading}>Import Emails</s-button>
-                <s-button tone="critical" onClick={handleClearUsers}>Clear All</s-button>
-              </s-stack>
-
-              {eligibleUsers.length > 0 && (
-                <s-data-table>
-                  <s-data-table-row slot="headings">
-                    <s-data-table-cell>Email</s-data-table-cell>
-                    <s-data-table-cell>Added</s-data-table-cell>
-                    <s-data-table-cell></s-data-table-cell>
-                  </s-data-table-row>
-                  {eligibleUsers.map((u) => (
-                    <s-data-table-row key={u.id}>
-                      <s-data-table-cell>{u.email}</s-data-table-cell>
-                      <s-data-table-cell>
-                        {new Date(u.createdAt).toLocaleDateString()}
-                      </s-data-table-cell>
-                      <s-data-table-cell>
-                        <s-button
-                          size="slim"
-                          tone="critical"
-                          onClick={() => handleDeleteUser(u.id)}
-                        >
-                          Remove
-                        </s-button>
-                      </s-data-table-cell>
-                    </s-data-table-row>
+              {activeTab === 5 && (
+                <BlockStack gap="400">
+                  {Object.keys(copywriting).map(key => (
+                    <TextField
+                      key={key}
+                      label={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                      value={copywriting[key]}
+                      onChange={(val) => setCopywriting({ ...copywriting, [key]: val })}
+                      autoComplete="off"
+                    />
                   ))}
-                </s-data-table>
+                </BlockStack>
               )}
-              {eligibleUsers.length === 0 && (
-                <s-paragraph>No eligible users yet.</s-paragraph>
-              )}
-            </s-stack>
-          )}
-        </s-section>
-      )}
-
-      {/* ── Tab 4: Styling ── */}
-      {activeTab === 4 && (
-        <s-section heading="Widget Styling">
-          <s-stack direction="block" gap="base">
-            {[
-              ["primaryColor", "Primary Color"],
-              ["secondaryColor", "Secondary Color"],
-              ["accentColor", "Accent Color"],
-              ["progressBarColor", "Progress Bar Color"],
-              ["badgeColor", "Badge Color"],
-            ].map(([key, label]) => (
-              <s-stack key={key} direction="inline" gap="tight" alignment="center">
-                <s-text-field
-                  label={label}
-                  value={styling[key] || ""}
-                  onChange={(e) => setStyling({ ...styling, [key]: e.detail.value })}
-                />
-                <input
-                  type="color"
-                  value={styling[key] || "#000000"}
-                  onChange={(e) => setStyling({ ...styling, [key]: e.target.value })}
-                  style={{ width: 40, height: 40, border: "none", cursor: "pointer" }}
-                />
-              </s-stack>
-            ))}
-            <s-text-field
-              label="Border Radius"
-              value={styling.borderRadius || "12px"}
-              onChange={(e) => setStyling({ ...styling, borderRadius: e.detail.value })}
-              helpText="e.g. 8px, 12px, 50%"
-            />
-            <s-select
-              label="Card Style"
-              value={styling.cardStyle || "elevated"}
-              onChange={(e) => setStyling({ ...styling, cardStyle: e.detail.value })}
-            >
-              <option value="elevated">Elevated (with shadow)</option>
-              <option value="flat">Flat (no shadow)</option>
-              <option value="bordered">Bordered</option>
-            </s-select>
-          </s-stack>
-        </s-section>
-      )}
-
-      {/* ── Tab 5: Copy ── */}
-      {activeTab === 5 && (
-        <s-section heading="Copywriting">
-          <s-stack direction="block" gap="base">
-            {Object.keys(copywriting).map((key) => (
-              <s-text-field
-                key={key}
-                label={key.replace(/([A-Z])/g, " $1").trim()}
-                value={copywriting[key] || ""}
-                onChange={(e) =>
-                  setCopywriting({ ...copywriting, [key]: e.detail.value })
-                }
-              />
-            ))}
-          </s-stack>
-        </s-section>
-      )}
-    </s-page>
+            </Box>
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
   );
 }
 

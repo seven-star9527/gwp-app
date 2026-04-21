@@ -1,4 +1,5 @@
 api_version = "2026-01"
+uid = "397f140a-3c9d-e8c2-a274-3ba82a4a0ae2fbe95bf3"
 
 [[extensions]]
 name = "GWP Theme Extension"

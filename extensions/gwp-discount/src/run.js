@@ -80,12 +80,14 @@ export function run(input) {
 
     // 7. 在额度内逐个分配 100% off
     let remaining = allowance;
+    /** @type {Record<string, number>} */
     const map = {};
     for (const u of units) {
       if (u.unitPrice <= remaining + 0.001) {
         remaining -= u.unitPrice;
         if (remaining < 0) remaining = 0;
-        map[u.lineId] = (map[u.lineId] || 0) + 1;
+        const currentCount = map[u.lineId] || 0;
+        map[u.lineId] = currentCount + 1;
       }
     }
 

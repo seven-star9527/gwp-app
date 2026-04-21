@@ -6,7 +6,8 @@ application_url = "https://fuumuui-clearing.onrender.com"
 embedded = true
 
 [access_scopes]
-scopes = "write_products,read_products,write_customers,read_customers,write_discounts,read_discounts,write_cart_transforms,read_cart_transforms,read_orders"
+# 临时移除受保护权限，确保部署通过。
+scopes = "write_products,read_products,write_discounts,read_discounts"
 
 [auth]
 redirect_urls = [
@@ -16,11 +17,11 @@ redirect_urls = [
 ]
 
 [webhooks]
-api_version = "2026-01"
+api_version = "2024-10"
 
-  [[webhooks.subscriptions]]
-  topics = [ "orders/create" ]
-  uri = "/webhooks"
+#  [[webhooks.subscriptions]]
+#  topics = [ "orders/create" ]
+#  uri = "/webhooks"
 
   [[webhooks.subscriptions]]
   topics = [ "app/uninstalled" ]

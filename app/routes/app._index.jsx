@@ -1,14 +1,28 @@
-// app/routes/app._index.jsx — GWP Dashboard
-import { useLoaderData, useFetcher, useRouteError } from "react-router";
-import { authenticate } from "../shopify.server";
-import { boundary } from "@shopify/shopify-app-react-router/server";
-import { getCampaigns, deleteCampaign } from "../models/campaign.server";
-import { deleteAutomaticDiscount } from "../models/shopify-operations.server";
+import {
+  Page,
+  Layout,
+  Card,
+  IndexTable,
+  Button,
+  Text,
+  Badge,
+  Box,
+  InlineStack,
+  BlockStack,
+  EmptyState,
+  Banner,
+} from "@shopify/polaris";
+import { PlusIcon, DeleteIcon, EditIcon } from "@shopify/polaris-icons";
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
   const campaigns = await getCampaigns(session.shop);
-  return { campaigns };
+  
+  // Calculate stats
+  const activeCount = campaigns.filter(c => c.status === "active").length;
+  const totalGiftsSent = campaigns.reduce((acc, c) => acc + (c._count?.gifts || 0), 0);
+  
+  return { campaigns, stats: { activeCount, totalGiftsSent } };
 };
 
 export const action = async ({ request }) => {
@@ -19,122 +33,106 @@ export const action = async ({ request }) => {
   if (actionType === "delete") {
     const id = formData.get("id");
     const discountId = formData.get("discountId");
-
-    // Delete Shopify discount if exists
     if (discountId) {
-      try {
-        await deleteAutomaticDiscount(admin, discountId);
-      } catch (e) {
-        console.error("Failed to delete Shopify discount:", e);
-      }
+      try { await deleteAutomaticDiscount(admin, discountId); } catch (e) { console.error(e); }
     }
     await deleteCampaign(id, session.shop);
-    return { success: true };
+    return { success: true, message: "Campaign deleted." };
   }
-
   return null;
 };
 
-function formatDate(dateStr) {
-  if (!dateStr) return "—";
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-}
-
-function StatusBadge({ status }) {
-  const map = {
-    active: "success",
-    draft: "warning",
-    paused: "attention",
-    ended: "critical",
-  };
-  const tone = map[status] || "info";
-  return <s-badge tone={tone}>{status}</s-badge>;
-}
-
 export default function Dashboard() {
-  const { campaigns } = useLoaderData();
+  const { campaigns, stats } = useLoaderData();
   const fetcher = useFetcher();
 
-  function handleDelete(campaign) {
-    if (!confirm(`Delete campaign "${campaign.title}"? This cannot be undone.`)) return;
-    const fd = new FormData();
-    fd.append("actionType", "delete");
-    fd.append("id", campaign.id);
-    if (campaign.discountId) fd.append("discountId", campaign.discountId);
-    fetcher.submit(fd, { method: "POST" });
-  }
+  const resourceName = { singular: "campaign", plural: "campaigns" };
 
   if (campaigns.length === 0) {
     return (
-      <s-page heading="GWP Campaigns">
-        <s-button slot="primary-action" href="/app/campaign/new" variant="primary">
-          Create Campaign
-        </s-button>
-        <s-section>
-          <s-stack direction="block" gap="loose" alignment="center">
-            <s-icon source="gift" />
-            <s-heading>No campaigns yet</s-heading>
-            <s-paragraph>Create your first Gift With Purchase campaign to reward customers!</s-paragraph>
-            <s-button href="/app/campaign/new" variant="primary">Create Your First Campaign</s-button>
-          </s-stack>
-        </s-section>
-      </s-page>
+      <Page title="GWP Campaigns" primaryAction={{ content: "Create Campaign", url: "/app/campaign/new", icon: PlusIcon }}>
+        <EmptyState
+          heading="Create your first GWP campaign"
+          action={{ content: "Create Campaign", url: "/app/campaign/new" }}
+          image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
+        >
+          <p>Reward your customers with free gifts based on their spend tiers.</p>
+        </EmptyState>
+      </Page>
     );
   }
 
   return (
-    <s-page heading="GWP Campaigns">
-      <s-button slot="primary-action" href="/app/campaign/new" variant="primary">
-        Create Campaign
-      </s-button>
+    <Page title="GWP Dashboard" primaryAction={{ content: "Create Campaign", url: "/app/campaign/new", icon: PlusIcon }}>
+      <Layout>
+        <Layout.Section>
+          <InlineStack gap="400">
+            <div style={{ flex: 1 }}>
+              <Card>
+                <BlockStack gap="100">
+                  <Text variant="headingSm">Active Campaigns</Text>
+                  <Text variant="headingLg" as="p">{stats.activeCount}</Text>
+                </BlockStack>
+              </Card>
+            </div>
+            <div style={{ flex: 1 }}>
+              <Card>
+                <BlockStack gap="100">
+                  <Text variant="headingSm">Total Gifts Configured</Text>
+                  <Text variant="headingLg" as="p">{stats.totalGiftsSent}</Text>
+                </BlockStack>
+              </Card>
+            </div>
+          </InlineStack>
+        </Layout.Section>
 
-      <s-section>
-        <s-index-table resource-name-singular="campaign" resource-name-plural="campaigns" item-count={campaigns.length}>
-          <s-index-table-row slot="headings">
-            <s-index-table-cell>Title</s-index-table-cell>
-            <s-index-table-cell>Status</s-index-table-cell>
-            <s-index-table-cell>Start</s-index-table-cell>
-            <s-index-table-cell>End</s-index-table-cell>
-            <s-index-table-cell>Tiers</s-index-table-cell>
-            <s-index-table-cell>Gifts</s-index-table-cell>
-            <s-index-table-cell>Users</s-index-table-cell>
-            <s-index-table-cell>Actions</s-index-table-cell>
-          </s-index-table-row>
-
-          {campaigns.map((c) => {
-            const tiers = (() => { try { return JSON.parse(c.tiers); } catch { return []; } })();
-            return (
-              <s-index-table-row key={c.id} id={c.id}>
-                <s-index-table-cell>
-                  <s-link href={`/app/campaign/${c.id}`}>{c.title}</s-link>
-                </s-index-table-cell>
-                <s-index-table-cell>
-                  <StatusBadge status={c.status} />
-                </s-index-table-cell>
-                <s-index-table-cell>{formatDate(c.startTime)}</s-index-table-cell>
-                <s-index-table-cell>{formatDate(c.endTime)}</s-index-table-cell>
-                <s-index-table-cell>{tiers.length}</s-index-table-cell>
-                <s-index-table-cell>{c._count?.gifts ?? 0}</s-index-table-cell>
-                <s-index-table-cell>{c._count?.eligibleUsers ?? 0}</s-index-table-cell>
-                <s-index-table-cell>
-                  <s-stack direction="inline" gap="tight">
-                    <s-button href={`/app/campaign/${c.id}`} size="slim">Edit</s-button>
-                    <s-button
-                      size="slim"
-                      tone="critical"
-                      onClick={() => handleDelete(c)}
-                    >
-                      Delete
-                    </s-button>
-                  </s-stack>
-                </s-index-table-cell>
-              </s-index-table-row>
-            );
-          })}
-        </s-index-table>
-      </s-section>
-    </s-page>
+        <Layout.Section>
+          <Card padding="0">
+            <IndexTable
+              resourceName={resourceName}
+              itemCount={campaigns.length}
+              headings={[
+                { title: "Campaign" },
+                { title: "Status" },
+                { title: "Start" },
+                { title: "End" },
+                { title: "Tiers" },
+                { title: "Actions" },
+              ]}
+              selectable={false}
+            >
+              {campaigns.map((c, index) => (
+                <IndexTable.Row id={c.id} key={c.id} position={index}>
+                  <IndexTable.Cell>
+                    <Text variant="bodyMd" weight="bold">{c.title}</Text>
+                  </IndexTable.Cell>
+                  <IndexTable.Cell>
+                    <Badge tone={c.status === "active" ? "success" : "attention"}>{c.status}</Badge>
+                  </IndexTable.Cell>
+                  <IndexTable.Cell>{new Date(c.startTime).toLocaleDateString()}</IndexTable.Cell>
+                  <IndexTable.Cell>{new Date(c.endTime).toLocaleDateString()}</IndexTable.Cell>
+                  <IndexTable.Cell>{JSON.parse(c.tiers || "[]").length} Tiers</IndexTable.Cell>
+                  <IndexTable.Cell>
+                    <ButtonGroup>
+                      <Button size="slim" icon={EditIcon} url={`/app/campaign/${c.id}`}>Edit</Button>
+                      <Button size="slim" icon={DeleteIcon} tone="destructive" onClick={() => {
+                        if(confirm("Delete?")) {
+                          const fd = new FormData();
+                          fd.append("actionType", "delete");
+                          fd.append("id", c.id);
+                          if(c.discountId) fd.append("discountId", c.discountId);
+                          fetcher.submit(fd, { method: "POST" });
+                        }
+                      }}>Delete</Button>
+                    </ButtonGroup>
+                  </IndexTable.Cell>
+                </IndexTable.Row>
+              ))}
+            </IndexTable>
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
   );
 }
 
