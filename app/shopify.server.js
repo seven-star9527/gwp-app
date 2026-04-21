@@ -14,6 +14,7 @@ const shopify = shopifyApp({
   scopes: process.env.SCOPES?.split(",") || ["write_products", "read_products", "write_discounts", "read_discounts", "read_orders"],
   appUrl: process.env.SHOPIFY_APP_URL || "",
   authPathPrefix: "/auth",
+  isEmbeddedApp: false,
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.SingleMerchant,
   future: {

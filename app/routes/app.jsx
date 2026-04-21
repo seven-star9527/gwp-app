@@ -20,12 +20,8 @@ export default function App() {
   const { apiKey } = useLoaderData();
 
   return (
-    <AppProvider isEmbeddedApp apiKey={apiKey}>
+    <AppProvider isEmbeddedApp={false} apiKey={apiKey}>
       <PolarisAppProvider i18n={enTranslations}>
-        <ui-nav-menu>
-          <a href="/app" rel="home">Dashboard</a>
-          <a href="/app/campaign/new">New Campaign</a>
-        </ui-nav-menu>
         <Outlet />
       </PolarisAppProvider>
     </AppProvider>

@@ -3,7 +3,7 @@
 name = "GWP - Gift With Purchase"
 client_id = "4fd28b1f0bd91b4480cfdba0459ae16e"  
 application_url = "https://fuumuui-clearing.onrender.com"
-embedded = true
+embedded = false
 
 [access_scopes]
 scopes = "write_products,read_products,write_discounts,read_discounts,read_orders"
