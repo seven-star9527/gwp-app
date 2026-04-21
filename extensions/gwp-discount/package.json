@@ -8,5 +8,31 @@
   },
   "dependencies": {
     "@shopify/shopify_function": "^0.1.0"
+  },
+  "codegen": {
+    "overwrite": true,
+    "schema": "schema.graphql",
+    "documents": "src/run.graphql",
+    "generates": {
+      "generated/api.ts": {
+        "plugins": [
+          "typescript",
+          "typescript-operations"
+        ],
+        "config": {
+          "flattenGeneratedTypes": true,
+          "avoidOptionals": true,
+          "enumsAsTypes": true,
+          "scalars": {
+            "Decimal": "string",
+            "Int": "number",
+            "Float": "number",
+            "String": "string",
+            "Boolean": "boolean",
+            "ID": "string"
+          }
+        }
+      }
+    }
   }
 }
