@@ -1,5 +1,5 @@
 // app/routes/app.jsx
-import { Outlet, useLoaderData, useRouteError } from "react-router";
+import { Outlet, useLoaderData, useRouteError, Link } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider as AppBridgeProvider } from "@shopify/shopify-app-react-router/react";
 import { AppProvider as PolarisAppProvider } from "@shopify/polaris";
@@ -21,16 +21,12 @@ export const loader = async ({ request }) => {
 export default function App() {
   const { apiKey, host } = useLoaderData();
 
-  if (!apiKey) {
-    console.error("Missing SHOPIFY_API_KEY. Please check your Render environment variables.");
-  }
-
   return (
     <AppBridgeProvider embedded apiKey={apiKey} host={host}>
       <PolarisAppProvider i18n={enTranslations}>
         <ui-nav-menu>
-          <a href="/app" rel="home">Dashboard</a>
-          <a href="/app/campaign/new">New Campaign</a>
+          <Link to="/app" rel="home">Dashboard</Link>
+          <Link to="/app/campaign/new">New Campaign</Link>
         </ui-nav-menu>
         <Outlet />
       </PolarisAppProvider>
