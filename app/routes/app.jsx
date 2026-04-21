@@ -11,14 +11,22 @@ export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
 export const loader = async ({ request }) => {
   await authenticate.admin(request);
-  return { apiKey: process.env.SHOPIFY_API_KEY || "" };
+  const url = new URL(request.url);
+  return { 
+    apiKey: process.env.SHOPIFY_API_KEY || "",
+    host: url.searchParams.get("host") || "",
+  };
 };
 
 export default function App() {
-  const { apiKey } = useLoaderData();
+  const { apiKey, host } = useLoaderData();
+
+  if (!apiKey) {
+    console.error("Missing SHOPIFY_API_KEY. Please check your Render environment variables.");
+  }
 
   return (
-    <AppBridgeProvider embedded apiKey={apiKey}>
+    <AppBridgeProvider embedded apiKey={apiKey} host={host}>
       <PolarisAppProvider i18n={enTranslations}>
         <ui-nav-menu>
           <a href="/app" rel="home">Dashboard</a>
