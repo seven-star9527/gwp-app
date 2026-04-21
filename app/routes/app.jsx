@@ -25,8 +25,8 @@ export default function App() {
     <AppBridgeProvider isEmbeddedApp apiKey={apiKey}>
       <PolarisAppProvider i18n={enTranslations}>
         <ui-nav-menu>
-          <a href="/app" rel="home">Dashboard</a>
-          <a href="/app/campaign/new">New Campaign</a>
+          <Link to="/app" rel="home">Dashboard</Link>
+          <Link to="/app/campaign/new">New Campaign</Link>
         </ui-nav-menu>
         <Outlet />
       </PolarisAppProvider>
