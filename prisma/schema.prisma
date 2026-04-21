@@ -6,7 +6,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:dev.db"
+  url      = env("DATABASE_URL")
 }
 
 // Shopify Session 表（Remix 模板自带）
