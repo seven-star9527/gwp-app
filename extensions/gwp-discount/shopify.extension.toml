@@ -10,7 +10,7 @@ type = "function"
   path = "dist/function.wasm"
   watch = ["src/**/*.js"]
 
-  [extensions.targeting]
+  [[extensions.targeting]]
   target = "purchase.product-discount.run"
   input_query = "src/run.graphql"
   export = "run"

@@ -2,7 +2,7 @@
 
 name = "GWP - Gift With Purchase"
 client_id = "4fd28b1f0bd91b4480cfdba0459ae16e"  
-application_url = "https://你的APP域名.onrender.com"
+application_url = "https://fuumuui-clearing.onrender.com"
 embedded = true
 
 [access_scopes]
@@ -10,9 +10,9 @@ scopes = "write_products,read_products,write_customers,read_customers,write_disc
 
 [auth]
 redirect_urls = [
-  "https://你的APP域名.onrender.com/auth/callback",
-  "https://你的APP域名.onrender.com/auth/shopify/callback",
-  "https://你的APP域名.onrender.com/api/auth/callback"
+  "https://fuumuui-clearing.onrender.com/auth/callback",
+  "https://fuumuui-clearing.onrender.com/auth/shopify/callback",
+  "https://fuumuui-clearing.onrender.com/api/auth/callback"
 ]
 
 [webhooks]
@@ -27,7 +27,7 @@ api_version = "2026-01"
   uri = "/webhooks"
 
 [app_proxy]
-url = "https://你的APP域名.onrender.com/api/gwp"
+url = "https://fuumuui-clearing.onrender.com/api/gwp"
 subpath = "gwp"
 prefix = "apps"
 
