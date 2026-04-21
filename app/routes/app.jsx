@@ -1,7 +1,7 @@
 // app/routes/app.jsx
-import { Outlet, useLoaderData, useRouteError, Link } from "react-router";
+import { Outlet, useRouteError, Link } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
-import { AppProvider as AppBridgeProvider } from "@shopify/shopify-app-react-router/react";
+import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { AppProvider as PolarisAppProvider } from "@shopify/polaris";
 import enTranslations from "@shopify/polaris/locales/en.json";
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
@@ -11,18 +11,12 @@ export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
 export const loader = async ({ request }) => {
   await authenticate.admin(request);
-  const url = new URL(request.url);
-  return { 
-    apiKey: process.env.SHOPIFY_API_KEY || "",
-    host: url.searchParams.get("host") || "",
-  };
+  return null;
 };
 
 export default function App() {
-  const { apiKey, host } = useLoaderData();
-
   return (
-    <AppBridgeProvider isEmbeddedApp apiKey={apiKey}>
+    <AppProvider>
       <PolarisAppProvider i18n={enTranslations}>
         <ui-nav-menu>
           <Link to="/app" rel="home">Dashboard</Link>
@@ -30,7 +24,7 @@ export default function App() {
         </ui-nav-menu>
         <Outlet />
       </PolarisAppProvider>
-    </AppBridgeProvider>
+    </AppProvider>
   );
 }
 
