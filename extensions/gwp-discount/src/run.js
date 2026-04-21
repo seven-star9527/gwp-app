@@ -1,5 +1,4 @@
 // @ts-check
-import { DiscountApplicationStrategy } from "../generated/api";
 
 /**
  * @typedef {import("../generated/api").RunInput} RunInput
@@ -8,7 +7,7 @@ import { DiscountApplicationStrategy } from "../generated/api";
 
 /** @type {FunctionRunResult} */
 const NO_DISCOUNT = {
-  discountApplicationStrategy: DiscountApplicationStrategy.First,
+  discountApplicationStrategy: "FIRST",
   discounts: [],
 };
 
@@ -97,7 +96,7 @@ export function run(input) {
     if (!targets.length) return NO_DISCOUNT;
 
     return {
-      discountApplicationStrategy: DiscountApplicationStrategy.First,
+      discountApplicationStrategy: "FIRST",
       discounts: [
         {
           targets,
