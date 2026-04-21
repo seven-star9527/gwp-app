@@ -1,0 +1,82 @@
+{% comment %}
+  GWP Landing Page Block
+  Shows gift tiers and available gift products for the active GWP campaign.
+{% endcomment %}
+
+{{ 'gwp-styles.css' | asset_url | stylesheet_tag }}
+
+<div
+  id="gwp-landing-root"
+  data-proxy-base="/apps/gwp"
+  data-show-tiers="{{ section.settings.show_tiers }}"
+  data-show-gifts="{{ section.settings.show_gifts }}"
+  data-max-gifts="{{ section.settings.max_gifts }}"
+  style="display:none"
+>
+  <div class="gwp-landing">
+
+    <!-- Header -->
+    <div class="gwp-landing__header">
+      <h1 class="gwp-landing__title" id="gwp-landing-title">🎁 Free Gifts For You!</h1>
+      <p class="gwp-landing__subtitle" id="gwp-landing-subtitle">Spend more, earn more free gifts!</p>
+    </div>
+
+    <!-- Tiers Section -->
+    <div class="gwp-tiers-section" id="gwp-tiers-section" style="display:none">
+      <div class="gwp-tiers-section__heading">Spend Tiers</div>
+      <div class="gwp-tiers-grid" id="gwp-tiers-grid">
+        <div class="gwp-loading-center">
+          <span class="gwp-spinner"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gifts Grid Section -->
+    <div class="gwp-gifts-section" id="gwp-gifts-section" style="display:none">
+      <div class="gwp-gifts-section__heading">Available Gifts</div>
+      <div class="gwp-gifts-grid" id="gwp-gifts-grid">
+        <div class="gwp-loading-center">
+          <span class="gwp-spinner"></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="{{ 'gwp-landing.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "GWP Landing Page",
+  "target": "section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_tiers",
+      "label": "Show Spend Tiers",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_gifts",
+      "label": "Show Gift Products",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "max_gifts",
+      "label": "Max Gifts to Display",
+      "min": 4,
+      "max": 24,
+      "step": 4,
+      "default": 12
+    }
+  ],
+  "presets": [
+    {
+      "name": "GWP Landing Page"
+    }
+  ]
+}
+{% endschema %}

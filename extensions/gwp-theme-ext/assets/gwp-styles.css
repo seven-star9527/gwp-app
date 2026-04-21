@@ -1,0 +1,692 @@
+/* ═══════════════════════════════════════════════════════════════════
+   GWP Theme Extension — Design System
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── CSS Variables ──────────────────────────────────────────────── */
+:root {
+  --gwp-primary: #FF6B35;
+  --gwp-secondary: #FFF8F0;
+  --gwp-accent: #2D3436;
+  --gwp-success: #00B894;
+  --gwp-danger: #D63031;
+  --gwp-gray-100: #F9FAFB;
+  --gwp-gray-200: #F3F4F6;
+  --gwp-gray-300: #E5E7EB;
+  --gwp-gray-400: #D1D5DB;
+  --gwp-gray-500: #9CA3AF;
+  --gwp-gray-600: #6B7280;
+  --gwp-gray-700: #374151;
+  --gwp-gray-800: #1F2937;
+  --gwp-gray-900: #111827;
+  --gwp-radius: 12px;
+  --gwp-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --gwp-shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.15);
+  --gwp-transition: all 0.25s ease;
+}
+
+/* ── Landing Page ───────────────────────────────────────────────── */
+.gwp-landing {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  font-family: inherit;
+}
+
+.gwp-landing__header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.gwp-landing__title {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--gwp-accent);
+  margin: 0 0 12px;
+  line-height: 1.2;
+}
+
+.gwp-landing__subtitle {
+  font-size: 1.1rem;
+  color: var(--gwp-gray-600);
+  margin: 0;
+}
+
+/* ── Tier Section ───────────────────────────────────────────────── */
+.gwp-tiers-section {
+  margin-bottom: 56px;
+}
+
+.gwp-tiers-section__heading {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--gwp-gray-700);
+  margin-bottom: 24px;
+}
+
+.gwp-tiers-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+}
+
+.gwp-tier-card {
+  flex: 1 1 140px;
+  max-width: 180px;
+  background: #fff;
+  border-radius: var(--gwp-radius);
+  box-shadow: var(--gwp-shadow);
+  padding: 20px 16px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: var(--gwp-transition);
+  border: 2px solid transparent;
+  cursor: default;
+}
+
+.gwp-tier-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gwp-primary);
+  opacity: 0.3;
+  transition: var(--gwp-transition);
+}
+
+.gwp-tier-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--gwp-shadow-lg);
+}
+
+.gwp-tier-card.active {
+  border-color: var(--gwp-primary);
+  background: var(--gwp-secondary);
+}
+
+.gwp-tier-card.active::before {
+  opacity: 1;
+}
+
+.gwp-tier-card.reached {
+  border-color: var(--gwp-success);
+  background: #F0FFF8;
+}
+
+.gwp-tier-card.reached::before {
+  background: var(--gwp-success);
+  opacity: 1;
+}
+
+.gwp-tier-card__threshold {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gwp-accent);
+  margin: 0 0 4px;
+}
+
+.gwp-tier-card__label {
+  font-size: 0.75rem;
+  color: var(--gwp-gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 12px;
+}
+
+.gwp-tier-card__allowance {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--gwp-primary);
+  background: rgba(255, 107, 53, 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.gwp-tier-card.reached .gwp-tier-card__allowance {
+  color: var(--gwp-success);
+  background: rgba(0, 184, 148, 0.1);
+}
+
+.gwp-tier-card__badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  background: var(--gwp-success);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 11px;
+}
+
+/* ── Gifts Grid ─────────────────────────────────────────────────── */
+.gwp-gifts-section {
+  margin-bottom: 40px;
+}
+
+.gwp-gifts-section__heading {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--gwp-gray-700);
+  margin-bottom: 24px;
+}
+
+.gwp-gifts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.gwp-gift-card {
+  background: #fff;
+  border-radius: var(--gwp-radius);
+  box-shadow: var(--gwp-shadow);
+  overflow: hidden;
+  transition: var(--gwp-transition);
+  position: relative;
+}
+
+.gwp-gift-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--gwp-shadow-lg);
+}
+
+.gwp-gift-card__image-wrapper {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--gwp-gray-100);
+}
+
+.gwp-gift-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.gwp-gift-card:hover .gwp-gift-card__image {
+  transform: scale(1.05);
+}
+
+.gwp-gift-card__badge-free {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--gwp-primary);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.gwp-gift-card__soldout-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.gwp-gift-card__body {
+  padding: 16px;
+}
+
+.gwp-gift-card__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--gwp-gray-800);
+  margin: 0 0 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gwp-gift-card__variant {
+  font-size: 0.8rem;
+  color: var(--gwp-gray-500);
+  margin: 0 0 8px;
+}
+
+.gwp-gift-card__pricing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gwp-gift-card__price-free {
+  color: var(--gwp-success);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.gwp-gift-card__price-original {
+  color: var(--gwp-gray-400);
+  text-decoration: line-through;
+  font-size: 0.85rem;
+}
+
+/* ── Cart Widget ────────────────────────────────────────────────── */
+.gwp-cart-widget {
+  border: 2px solid var(--gwp-primary);
+  border-radius: var(--gwp-radius);
+  background: var(--gwp-secondary);
+  padding: 16px 20px;
+  margin: 16px 0;
+  transition: var(--gwp-transition);
+}
+
+.gwp-cart-widget__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.gwp-cart-widget__title {
+  font-weight: 700;
+  color: var(--gwp-accent);
+  flex: 1;
+  font-size: 1rem;
+}
+
+/* Progress Bar */
+.gwp-progress-container {
+  margin-bottom: 12px;
+}
+
+.gwp-progress-text {
+  font-size: 0.85rem;
+  color: var(--gwp-gray-600);
+  margin-bottom: 6px;
+}
+
+.gwp-progress-text strong {
+  color: var(--gwp-primary);
+}
+
+.gwp-progress-bar-track {
+  height: 8px;
+  background: var(--gwp-gray-200);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.gwp-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gwp-primary), #FF8C42);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+  min-width: 0;
+}
+
+/* Selected Gifts Display */
+.gwp-selected-gifts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.gwp-selected-gift-thumb {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid var(--gwp-primary);
+}
+
+.gwp-selected-gift-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* CTA Button */
+.gwp-cta-btn {
+  width: 100%;
+  background: var(--gwp-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--gwp-transition);
+  letter-spacing: 0.02em;
+}
+
+.gwp-cta-btn:hover:not(:disabled) {
+  background: #e55a24;
+  transform: translateY(-1px);
+}
+
+.gwp-cta-btn:disabled {
+  background: var(--gwp-gray-300);
+  color: var(--gwp-gray-500);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Modal ──────────────────────────────────────────────────────── */
+.gwp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.gwp-modal-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gwp-modal {
+  background: #fff;
+  border-radius: 16px;
+  width: min(640px, 95vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateY(20px) scale(0.98);
+  transition: transform 0.3s ease;
+}
+
+.gwp-modal-overlay.open .gwp-modal {
+  transform: translateY(0) scale(1);
+}
+
+.gwp-modal__header {
+  display: flex;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--gwp-gray-200);
+  gap: 12px;
+}
+
+.gwp-modal__title {
+  flex: 1;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gwp-accent);
+  margin: 0;
+}
+
+.gwp-modal__close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--gwp-gray-500);
+  line-height: 1;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.gwp-modal__close:hover {
+  color: var(--gwp-accent);
+}
+
+.gwp-modal__info-bar {
+  background: var(--gwp-secondary);
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--gwp-gray-200);
+  display: flex;
+  gap: 24px;
+  font-size: 0.875rem;
+}
+
+.gwp-modal__info-item {
+  display: flex;
+  gap: 6px;
+}
+
+.gwp-modal__info-label {
+  color: var(--gwp-gray-500);
+}
+
+.gwp-modal__info-value {
+  font-weight: 700;
+  color: var(--gwp-primary);
+}
+
+.gwp-modal__body {
+  overflow-y: auto;
+  padding: 20px 24px;
+  flex: 1;
+}
+
+.gwp-modal__footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--gwp-gray-200);
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* Modal Gift Grid */
+.gwp-mgift-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.gwp-mgift {
+  border: 2px solid var(--gwp-gray-200);
+  border-radius: var(--gwp-radius);
+  overflow: hidden;
+  position: relative;
+  transition: var(--gwp-transition);
+  cursor: pointer;
+}
+
+.gwp-mgift:hover:not(.disabled) {
+  border-color: var(--gwp-primary);
+  transform: translateY(-2px);
+}
+
+.gwp-mgift.selected {
+  border-color: var(--gwp-primary);
+  background: var(--gwp-secondary);
+}
+
+.gwp-mgift.disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.gwp-mgift__check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  background: var(--gwp-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 12px;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.2s ease;
+}
+
+.gwp-mgift.selected .gwp-mgift__check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.gwp-mgift__image {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--gwp-gray-100);
+}
+
+.gwp-mgift__body {
+  padding: 10px 12px;
+}
+
+.gwp-mgift__title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gwp-gray-800);
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gwp-mgift__price {
+  font-size: 0.8rem;
+  color: var(--gwp-gray-500);
+  margin: 0 0 8px;
+}
+
+.gwp-mgift__btn {
+  width: 100%;
+  padding: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: var(--gwp-transition);
+}
+
+.gwp-mgift__btn--add {
+  background: var(--gwp-primary);
+  color: #fff;
+}
+
+.gwp-mgift__btn--add:hover {
+  background: #e55a24;
+}
+
+.gwp-mgift__btn--remove {
+  background: var(--gwp-gray-200);
+  color: var(--gwp-gray-700);
+}
+
+.gwp-mgift__btn--remove:hover {
+  background: var(--gwp-gray-300);
+}
+
+.gwp-mgift__btn--disabled {
+  background: var(--gwp-gray-200);
+  color: var(--gwp-gray-500);
+  cursor: not-allowed;
+}
+
+/* Done Button */
+.gwp-btn-done {
+  background: var(--gwp-accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--gwp-transition);
+}
+
+.gwp-btn-done:hover {
+  opacity: 0.85;
+}
+
+/* ── Spinner ────────────────────────────────────────────────────── */
+.gwp-spinner {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--gwp-gray-200);
+  border-top-color: var(--gwp-primary);
+  border-radius: 50%;
+  animation: gwp-spin 0.75s linear infinite;
+}
+
+/* ── Animations ─────────────────────────────────────────────────── */
+@keyframes gwp-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes gwp-fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.gwp-animate-in {
+  animation: gwp-fade-in 0.4s ease both;
+}
+
+.gwp-loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .gwp-landing__title {
+    font-size: 1.6rem;
+  }
+
+  .gwp-tiers-grid {
+    gap: 12px;
+  }
+
+  .gwp-tier-card {
+    flex: 1 1 110px;
+    padding: 14px 10px;
+  }
+
+  .gwp-tier-card__threshold {
+    font-size: 1.2rem;
+  }
+
+  .gwp-gifts-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .gwp-modal {
+    border-radius: 16px 16px 0 0;
+    max-height: 85vh;
+  }
+
+  .gwp-modal-overlay {
+    align-items: flex-end;
+  }
+
+  .gwp-mgift-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

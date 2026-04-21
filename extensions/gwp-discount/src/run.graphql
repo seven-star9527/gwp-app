@@ -1,0 +1,49 @@
+# extensions/gwp-discount/input.graphql
+
+query RunInput {
+  cart {
+    lines {
+      id
+      quantity
+      cost {
+        amountPerQuantity {
+          amount
+          currencyCode
+        }
+        totalAmount {
+          amount
+        }
+      }
+      merchandise {
+        ... on ProductVariant {
+          id
+          product {
+            id
+            hasAnyTag(tags: ["is_free_gift"])
+            inAnyCollection(ids: [])
+          }
+        }
+      }
+      attribute(key: "_is_gift") {
+        value
+      }
+    }
+    buyerIdentity {
+      customer {
+        id
+        hasAnyTag(tags: ["gwp_eligible"])
+        metafield(namespace: "gwp", key: "eligible") {
+          value
+        }
+      }
+    }
+    attribute(key: "_gwp_campaign_id") {
+      value
+    }
+  }
+  discountNode {
+    metafield(namespace: "$app:gwp-config", key: "function-configuration") {
+      value
+    }
+  }
+}

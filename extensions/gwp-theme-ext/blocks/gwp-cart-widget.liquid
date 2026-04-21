@@ -1,0 +1,125 @@
+{% comment %}
+  GWP Cart Widget Block
+  Shows progress bar, selected gifts, and gift selection modal in the cart.
+{% endcomment %}
+
+{{ 'gwp-styles.css' | asset_url | stylesheet_tag }}
+
+{% comment %} Calculate cart total excluding gift items {% endcomment %}
+{% assign cart_total = 0 %}
+{% for item in cart.items %}
+  {% assign is_gift = false %}
+  {% for prop in item.properties %}
+    {% if prop.first == "_is_gift" and prop.last == "true" %}
+      {% assign is_gift = true %}
+    {% endif %}
+  {% endfor %}
+  {% unless is_gift %}
+    {% assign cart_total = cart_total | plus: item.line_price %}
+  {% endunless %}
+{% endfor %}
+
+<div
+  id="gwp-cart-root"
+  data-proxy-base="/apps/gwp"
+  data-cart-total="{{ cart_total | divided_by: 100.0 }}"
+  data-customer-email="{{ customer.email | default: "" }}"
+  data-enable="{{ section.settings.enable }}"
+  data-show-progress="{{ section.settings.show_progress }}"
+  style="display:none"
+>
+
+  <!-- ── Cart Widget ── -->
+  <div class="gwp-cart-widget" id="gwp-widget-container">
+
+    <div class="gwp-cart-widget__header">
+      <span style="font-size:1.3rem">🎁</span>
+      <span class="gwp-cart-widget__title" id="gwp-widget-title">Free Gifts Unlocked!</span>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="gwp-progress-container" id="gwp-progress-container">
+      <div class="gwp-progress-text" id="gwp-progress-text"></div>
+      <div class="gwp-progress-bar-track">
+        <div class="gwp-progress-bar-fill" id="gwp-progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Selected Gifts Row -->
+    <div class="gwp-selected-gifts" id="gwp-selected-gifts-row"></div>
+
+    <!-- CTA -->
+    <button
+      class="gwp-cta-btn"
+      id="gwp-cta-btn"
+      disabled
+    >
+      Choose Your Free Gifts
+    </button>
+
+  </div>
+
+  <!-- ── Modal Overlay ── -->
+  <div class="gwp-modal-overlay" id="gwp-modal-overlay" role="dialog" aria-modal="true">
+    <div class="gwp-modal">
+
+      <div class="gwp-modal__header">
+        <h2 class="gwp-modal__title" id="gwp-modal-title">Choose Your Free Gifts</h2>
+        <button class="gwp-modal__close" id="gwp-modal-close" aria-label="Close">✕</button>
+      </div>
+
+      <div class="gwp-modal__info-bar">
+        <div class="gwp-modal__info-item">
+          <span class="gwp-modal__info-label">Gift Allowance:</span>
+          <span class="gwp-modal__info-value" id="gwp-modal-allowance">$0</span>
+        </div>
+        <div class="gwp-modal__info-item">
+          <span class="gwp-modal__info-label">Remaining:</span>
+          <span class="gwp-modal__info-value" id="gwp-modal-remaining">$0</span>
+        </div>
+      </div>
+
+      <div class="gwp-modal__body">
+        <div class="gwp-mgift-grid" id="gwp-mgift-grid">
+          <div class="gwp-loading-center">
+            <span class="gwp-spinner"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="gwp-modal__footer">
+        <button class="gwp-btn-done" id="gwp-modal-done">Done</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script src="{{ 'gwp-cart.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "GWP Cart Widget",
+  "target": "section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enable",
+      "label": "Enable GWP Cart Widget",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_progress",
+      "label": "Show Progress Bar",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "GWP Cart Widget"
+    }
+  ]
+}
+{% endschema %}

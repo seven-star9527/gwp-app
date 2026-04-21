@@ -1,0 +1,16 @@
+api_version = "2026-01"
+
+[[extensions]]
+name = "GWP Theme Extension"
+handle = "gwp-theme-ext"
+type = "theme"
+
+  [[extensions.blocks]]
+  name = "GWP Landing Page"
+  target = "section"
+  template = "blocks/gwp-landing-page.liquid"
+
+  [[extensions.blocks]]
+  name = "GWP Cart Widget"
+  target = "section"
+  template = "blocks/gwp-cart-widget.liquid"

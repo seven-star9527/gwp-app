@@ -1,0 +1,107 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:dev.db"
+}
+
+// Shopify Session 表（Remix 模板自带）
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// 活动表
+model Campaign {
+  id                  String    @id @default(uuid())
+  shop                String
+  title               String
+  status              String    @default("draft") // draft | active | paused | ended
+  startTime           DateTime
+  endTime             DateTime
+  requireEligibility  Boolean   @default(false)
+  discountId          String?   // Shopify automatic discount GID
+  functionConfigId    String?   // Shopify discount metafield ID
+  
+  // 阶梯配置 JSON: [{"threshold":39,"allowance":20},...]
+  tiers               String    @default("[]")
+  
+  // 样式配置 JSON
+  styling             String    @default("{}")
+  
+  // 文案配置 JSON
+  copywriting         String    @default("{}")
+  
+  // 赠品识别标签
+  giftTag             String    @default("is_free_gift")
+  
+  // 折扣显示信息
+  discountMessage     String    @default("Free Gift")
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  gifts               Gift[]
+  eligibleUsers       EligibleUser[]
+}
+
+// 赠品表
+model Gift {
+  id              String    @id @default(uuid())
+  campaignId      String
+  campaign        Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  productId       String    // Shopify product GID (e.g. gid://shopify/Product/123)
+  variantId       String    // Shopify variant GID
+  title           String
+  variantTitle    String    @default("")
+  price           Float     // 赠品原价
+  compareAtPrice  Float?    // 划线价
+  imageUrl        String?
+  handle          String    @default("")
+  
+  inventoryLimit  Int       @default(0) // 0 = 不限量
+  inventoryUsed   Int       @default(0) // 已送出数量
+  
+  isActive        Boolean   @default(true)
+  sortOrder       Int       @default(0)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([campaignId])
+}
+
+// 资格用户表
+model EligibleUser {
+  id          String    @id @default(uuid())
+  campaignId  String
+  campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  email       String
+  customerId  String?   // Shopify customer GID
+  tagged      Boolean   @default(false) // 是否已在 Shopify 打上标签
+  
+  createdAt   DateTime  @default(now())
+
+  @@unique([campaignId, email])
+  @@index([campaignId])
+  @@index([email])
+}

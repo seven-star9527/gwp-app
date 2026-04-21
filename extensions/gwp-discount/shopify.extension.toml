@@ -1,0 +1,23 @@
+api_version = "2026-01"
+
+[[extensions]]
+name = "GWP Product Discount"
+handle = "gwp-discount"
+type = "function"
+
+  [extensions.build]
+  command = ""
+  path = "dist/function.wasm"
+  watch = ["src/**/*.js"]
+
+  [extensions.targeting]
+  target = "purchase.product-discount.run"
+  input_query = "src/run.graphql"
+  export = "run"
+
+  [extensions.ui]
+  enable_create = false
+
+    [extensions.ui.paths]
+    create = "/app/campaign/new"
+    details = "/app/campaign/:id"
