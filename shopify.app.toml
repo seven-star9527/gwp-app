@@ -6,7 +6,7 @@ application_url = "https://fuumuui-clearing.onrender.com"
 embedded = true
 
 [access_scopes]
-scopes = "write_products,read_products,write_customers,read_customers,write_discounts,read_discounts,write_cart_transforms,read_cart_transforms"
+scopes = "write_products,read_products,write_customers,read_customers,write_discounts,read_discounts,write_cart_transforms,read_cart_transforms,read_orders"
 
 [auth]
 redirect_urls = [
@@ -33,3 +33,6 @@ prefix = "apps"
 
 [pos]
 embedded = false
+
+[build]
+automatically_update_urls_on_dev = true
