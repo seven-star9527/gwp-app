@@ -1,4 +1,4 @@
-// app/routes/app.campaign.$id.jsx — Create / Edit Campaign (Polished Polaris Version)
+// app/routes/app.campaign.$id.jsx — Create / Edit Campaign (Server-Safe Polaris Version)
 import { useState } from "react";
 import {
   useLoaderData,
@@ -28,34 +28,19 @@ import {
 } from "@shopify/polaris";
 import { SearchIcon, DeleteIcon, PlusIcon, ImportIcon } from "@shopify/polaris-icons";
 import { authenticate } from "../shopify.server";
-import { boundary } from "@shopify/shopify-app-react-router/server";
-import {
-  getCampaign,
-  createCampaign,
-  updateCampaign,
-  addGifts,
-  deleteGift,
-  addEligibleUsers,
-  deleteEligibleUser,
-  clearEligibleUsers,
-  getDefaultStyling,
-  getDefaultCopywriting,
-  getDefaultTiers,
-} from "../models/campaign.server";
-import {
-  getDiscountFunctionId,
-  createAutomaticDiscount,
-  updateAutomaticDiscount,
-  addProductTag,
-  addCustomerTag,
-  findCustomerByEmail,
-  searchProducts,
-} from "../models/shopify-operations.server";
 
 // ─── Loader ──────────────────────────────────────────────────────────────────
 export const loader = async ({ request, params }) => {
   const { session } = await authenticate.admin(request);
   const { id } = params;
+
+  // 动态导入后端模型，防止代码泄露到客户端
+  const { 
+    getCampaign, 
+    getDefaultTiers, 
+    getDefaultStyling, 
+    getDefaultCopywriting 
+  } = await import("../models/campaign.server");
 
   if (id === "new") {
     return {
@@ -90,6 +75,10 @@ export const action = async ({ request, params }) => {
   const formData = await request.formData();
   const actionType = formData.get("actionType");
 
+  // 动态导入所有后端依赖
+  const CampaignModel = await import("../models/campaign.server");
+  const ShopifyOps = await import("../models/shopify-operations.server");
+
   switch (actionType) {
     case "saveCampaign": {
       const data = {
@@ -107,67 +96,67 @@ export const action = async ({ request, params }) => {
       };
 
       if (id === "new") {
-        const campaign = await createCampaign(data);
+        const campaign = await CampaignModel.createCampaign(data);
         return redirect(`/app/campaign/${campaign.id}`);
       } else {
-        await updateCampaign(id, session.shop, data);
+        await CampaignModel.updateCampaign(id, session.shop, data);
         return { success: true, message: "Campaign saved!" };
       }
     }
 
     case "activate": {
-      const campaign = await getCampaign(id, session.shop);
+      const campaign = await CampaignModel.getCampaign(id, session.shop);
       if (!campaign) throw new Response("Not found", { status: 404 });
-      const functionId = await getDiscountFunctionId(admin);
+      const functionId = await ShopifyOps.getDiscountFunctionId(admin);
       if (!functionId) return { error: "Discount function not found." };
 
       let discountId = campaign.discountId;
       if (!discountId) {
-        const result = await createAutomaticDiscount(admin, campaign, functionId);
+        const result = await ShopifyOps.createAutomaticDiscount(admin, campaign, functionId);
         discountId = result?.discountId;
       } else {
-        await updateAutomaticDiscount(admin, campaign);
+        await ShopifyOps.updateAutomaticDiscount(admin, campaign);
       }
 
-      await updateCampaign(id, session.shop, { status: "active", discountId });
+      await CampaignModel.updateCampaign(id, session.shop, { status: "active", discountId });
       return { success: true, message: "Campaign activated!" };
     }
 
     case "deactivate": {
-      await updateCampaign(id, session.shop, { status: "paused" });
+      await CampaignModel.updateCampaign(id, session.shop, { status: "paused" });
       return { success: true, message: "Campaign paused." };
     }
 
     case "searchProducts": {
       const query = formData.get("query") || "";
-      const products = await searchProducts(admin, query);
+      const products = await ShopifyOps.searchProducts(admin, query);
       return { products };
     }
 
     case "addGifts": {
       const gifts = JSON.parse(formData.get("gifts") || "[]");
-      await addGifts(id, gifts);
+      await CampaignModel.addGifts(id, gifts);
       return { success: true };
     }
 
     case "deleteGift": {
-      await deleteGift(formData.get("giftId"));
+      await CampaignModel.deleteGift(formData.get("giftId"));
       return { success: true };
     }
 
     case "importUsers": {
       const emails = JSON.parse(formData.get("emails") || "[]");
-      await addEligibleUsers(id, emails);
+      await CampaignModel.addEligibleUsers(id, emails);
       return { success: true };
     }
 
     case "deleteUser": {
-      await deleteEligibleUser(formData.get("userId"));
+      await CampaignModel.deleteEligibleUser(formData.get("userId"));
       return { success: true };
     }
 
     case "clearUsers": {
-      await clearEligibleUsers(id);
+      await CampaignModel.clearEligibleUsers(id);
       return { success: true };
     }
 
@@ -504,9 +493,5 @@ export default function CampaignPage() {
 }
 
 export function ErrorBoundary() {
-  return boundary.error(useRouteError());
+  return <div>Something went wrong.</div>;
 }
-
-export const headers = (headersArgs) => {
-  return boundary.headers(headersArgs);
-};

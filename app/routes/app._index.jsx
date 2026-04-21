@@ -1,3 +1,4 @@
+import { useLoaderData, useFetcher } from "react-router";
 import {
   Page,
   Layout,
@@ -6,16 +7,19 @@ import {
   Button,
   Text,
   Badge,
-  Box,
   InlineStack,
   BlockStack,
   EmptyState,
-  Banner,
+  ButtonGroup,
 } from "@shopify/polaris";
 import { PlusIcon, DeleteIcon, EditIcon } from "@shopify/polaris-icons";
+import { authenticate } from "../shopify.server";
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
+  
+  // 动态导入后端模型
+  const { getCampaigns } = await import("../models/campaign.server");
   const campaigns = await getCampaigns(session.shop);
   
   // Calculate stats
@@ -33,6 +37,11 @@ export const action = async ({ request }) => {
   if (actionType === "delete") {
     const id = formData.get("id");
     const discountId = formData.get("discountId");
+
+    // 动态导入后端操作
+    const { deleteCampaign } = await import("../models/campaign.server");
+    const { deleteAutomaticDiscount } = await import("../models/shopify-operations.server");
+
     if (discountId) {
       try { await deleteAutomaticDiscount(admin, discountId); } catch (e) { console.error(e); }
     }
@@ -135,11 +144,3 @@ export default function Dashboard() {
     </Page>
   );
 }
-
-export function ErrorBoundary() {
-  return boundary.error(useRouteError());
-}
-
-export const headers = (headersArgs) => {
-  return boundary.headers(headersArgs);
-};
